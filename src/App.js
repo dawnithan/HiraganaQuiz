@@ -17,11 +17,9 @@ class App extends Component {
 
     handleClick(event) {
         if (event.target.checked) {
-            // https://stackoverflow.com/questions/26253351/correct-modification-of-state-arrays-in-reactjs
             this.setState({value: [...this.state.value, event.target.value]})
         }
         else {
-            // https://stackoverflow.com/questions/36326612/delete-item-from-state-array-in-react
             this.setState({value: this.state.value.filter(function(item) { 
                     return item !== event.target.value 
                 })
@@ -39,6 +37,10 @@ class App extends Component {
     handleFinish(event) {
         alert("Finished.");
         event.preventDefault();
+
+        for (let i = 0; i < 10; i++) {
+            console.log(event.target[i].value);
+        }
     }
 
     render() {
@@ -71,7 +73,7 @@ class App extends Component {
                     <form onSubmit={this.handleFinish}>
                         <ul>
                             {characters.map((item, index) => {
-                                return <QuizItem key={index} draw={item} choices={choices} i={index} />
+                                return <QuizItem key={index} draw={item} choices={choices} index={index} />
                             })}
                         </ul>
                         <div className="d-flex flex-row-reverse button-spacing">
@@ -87,7 +89,7 @@ class App extends Component {
 class QuizItem extends Component {
     render() {
         const c = this.props.choices;
-        const index = this.props.i;
+        const index = this.props.index;
         return (
             <div className="form-group row">
                 <label htmlFor="choice" className="character col-sm-2 col-form-label">{this.props.draw}</label>
@@ -109,6 +111,11 @@ function createQuiz(original, characters, choices, numQuestions) {
     const elements = [];
     let list = [];
 
+    const dictionary = {あ:"a",か:"ka",さ:"sa",た:"ta",な:"na",は:"ha",ま:"ma",や:"ya",ら:"ra",わ:"wa",ん:"n", 
+    い:"i",き:"ki",し:"shi",ち:"chi",に:"ni",ひ:"hi",み:"mi",り:"ri",う:"u",く:"ku",す:"su",つ:"tsu",ぬ:"nu",
+    ふ:"fu",む:"mu",ゆ:"yu",る:"ru",え:"e",け:"ke",せ:"se",て:"te",ね:"ne",へ:"he",め:"me",れ:"re",お:"o",
+    こ:"ko",そ:"so",と:"to",の:"no",ほ:"ho",も:"mo",よ:"yo",ろ:"ro",を:"wo"};
+
     // Combine the selected character groups into a single array
     for (let i = 0; i < original.length; i++) {
         let split = original[i].split(",");
@@ -123,17 +130,21 @@ function createQuiz(original, characters, choices, numQuestions) {
         characters.push(draw);
         
         for (let j = 0; j < 4; j++) {
-            list += elements[Math.floor(Math.random()*elements.length)];
+            const x = elements[Math.floor(Math.random()*elements.length)];
+            list += dictionary[x]
+            if (j !== 3) {
+                list += " ";
+            }
         }
-        
-        choices.push(list);
-        list = ''; // reset
-    }
 
-    // const dictionary = {あ:"a",か:"ka",さ:"sa",た:"ta",な:"na",は:"ha",ま:"ma",や:"ya",ら:"ra",わ:"wa",ん:"n", 
-    // い:"i",き:"ki",し:"shi",ち:"chi",に:"ni",ひ:"hi",み:"mi",り:"ri",う:"u",く:"ku",す:"su",つ:"tsu",ぬ:"nu",
-    // ふ:"fu",む:"mu",ゆ:"yu",る:"ru",え:"e",け:"ke",せ:"se",て:"te",ね:"ne",へ:"he",め:"me",れ:"re",お:"o",
-    // こ:"ko",そ:"so",と:"to",の:"no",ほ:"ho",も:"mo",よ:"yo",ろ:"ro",を:"wo"};
+        let y = list.split(' ');
+
+        // Replace an element of the list with the answer
+        y[Math.floor(Math.random()*y.length)] = dictionary[draw] + " <";
+        choices.push(y);
+        
+        list = "";
+    }
 }
 
 export default App;
