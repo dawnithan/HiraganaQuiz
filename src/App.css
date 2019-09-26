@@ -1,6 +1,7 @@
-/*body {
-    font-size: 1.5em;
-}*/
+body {
+    /* font-size: 1.5em; */
+    background-color: #f7f7f7;
+}
 
 .quiz-div {
     margin: 1em;

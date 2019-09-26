@@ -5,7 +5,7 @@ class Nav extends Component {
     render() {
         return (
             <nav className="navbar navbar-dark bg-dark">
-                <span className="navbar-brand mb-0 h1">Hiragana Quiz Application</span>
+                <span className="navbar-brand mx-auto mb-0 h1">Hiragana Quiz Application</span>
             </nav>
         );
     }
