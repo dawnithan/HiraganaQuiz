@@ -7,7 +7,9 @@ class App extends Component {
         super(props);
         this.state = {
             value: [],
-            isHidden: true
+            isHidden: true,
+            choices: [],
+            characters: [],
         };
 
         this.handleClick = this.handleClick.bind(this);
@@ -28,28 +30,41 @@ class App extends Component {
     }
 
     handleSubmit(event) {
-        if(this.state.value.length > 0) {
-            this.setState({isHidden: false})
-        }
         event.preventDefault();
+
+        if (this.state.value.length > 0) {
+            this.setState({isHidden: false})
+            
+            const original = this.state.value;
+            const characters = [];
+            const choices = [];
+            
+            createQuiz(original, characters, choices, 10);
+
+            this.setState({characters: characters});
+            this.setState({choices: choices});
+        }
     }
 
     handleFinish(event) {
-        alert("Finished.");
         event.preventDefault();
+        
+        var count = 0;
 
+        // Calculate how many answers are correct
         for (let i = 0; i < 10; i++) {
-            console.log(event.target[i].value);
+            console.log("Choice selected = " + event.target[i].value);
+            console.log("Answer = " + this.state.choices[i][4]);
+
+            // Cast both as ints, since one is a string and the other is a Number
+            if (parseInt(event.target[i].value) === parseInt(this.state.choices[i][4])) {
+                count++;
+            }
         }
+        alert("You got " + count + " questions correct.");
     }
 
     render() {
-        const original = this.state.value;
-        const characters = [];
-        const choices = [];
-
-        createQuiz(original, characters, choices, 10);
-
         return (
             <div className="quiz-div">
                 <form onSubmit={this.handleSubmit}>
@@ -72,8 +87,8 @@ class App extends Component {
                 {!this.state.isHidden && 
                     <form onSubmit={this.handleFinish}>
                         <ul>
-                            {characters.map((item, index) => {
-                                return <QuizItem key={index} draw={item} choices={choices} index={index} />
+                            {this.state.characters.map((item, index) => {
+                                return <QuizItem key={index} draw={item} choices={this.state.choices} index={index} />
                             })}
                         </ul>
                         <div className="d-flex flex-row-reverse button-spacing">
@@ -95,7 +110,7 @@ class QuizItem extends Component {
                 <label htmlFor="choice" className="character col-sm-2 col-form-label">{this.props.draw}</label>
                 <div className="col-sm-10">
                     <select name="choice" className="form-control">
-                        <option value=""></option>
+                        <option value="">-- select --</option>
                         <option value="1">{c[index][0]}</option>
                         <option value="2">{c[index][1]}</option>
                         <option value="3">{c[index][2]}</option>
@@ -129,20 +144,39 @@ function createQuiz(original, characters, choices, numQuestions) {
         const draw = elements[Math.floor(Math.random()*elements.length)];
         characters.push(draw);
         
+        let copyOfElements = [...elements];
+
+        // Delete the answer from the copy
+        let index = copyOfElements.indexOf(draw);
+        if (index > -1) {
+            copyOfElements.splice(index, 1);
+        }
+
+        // Get the 4 random choices by removing a drawn choice to make subsequent draws unique
         for (let j = 0; j < 4; j++) {
-            const x = elements[Math.floor(Math.random()*elements.length)];
-            list += dictionary[x]
+            const x = copyOfElements[Math.floor(Math.random()*copyOfElements.length)];
+            list += dictionary[x];
+            
+            // Delete x from the copy
+            let index = copyOfElements.indexOf(x);
+            if (index > -1) {
+                copyOfElements.splice(index, 1);
+            }
+
             if (j !== 3) {
                 list += " ";
             }
         }
 
-        let y = list.split(' ');
+        let question = list.split(' ');
 
-        // Replace an element of the list with the answer
-        y[Math.floor(Math.random()*y.length)] = dictionary[draw] + " <";
-        choices.push(y);
-        
+        // Replace an element of the list with the answer and include its position
+        let position = Math.floor(Math.random()*question.length);
+        question[position] = dictionary[draw];
+        question[question.length] = position + 1;
+
+        choices.push(question);
+
         list = "";
     }
 }
