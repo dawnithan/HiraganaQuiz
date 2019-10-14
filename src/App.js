@@ -7,14 +7,59 @@ class App extends Component {
         super(props);
         this.state = {
             value: [],
-            isHidden: true,
             choices: [],
             characters: [],
+            languageList: [],
+            isHidden: true,
+            numQuestions: 10
         };
 
         this.handleClick = this.handleClick.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleFinish = this.handleFinish.bind(this);
+    }
+
+    componentDidMount() {
+        const hiragana = [
+            'あ,い,う,え,お',
+            'か,き,く,け,こ',
+            'さ,し,す,せ,そ',
+            'た,ち,つ,て,と',
+            'な,に,ぬ,ね,の',
+            'は,ひ,ふ,へ,ほ',
+            'ま,み,む,め,も',
+            'や,ゆ,よ',
+            'ら,り,る,れ,ろ',
+            'わ,を,ん'
+        ];
+
+        const romaji = [
+            'a i u e o',
+            'ka ki ku ke ko',
+            'sa shi su se so',
+            'ta chi tsu te to',
+            'na ni nu ne no',
+            'ha hi fu he ho',
+            'ma mi mu me mo',
+            'ya yu yo',
+            'ra ri ru re ro',
+            'wa wo n'
+        ];
+
+        const result = [];
+
+        for (let i = 0; i < hiragana.length; i++) {
+            
+            let newItem = {
+                id: i, 
+                hiragana: hiragana[i], 
+                romaji: romaji[i]
+            };
+
+            result.push(newItem);
+        }
+
+        this.setState({languageList: result});
     }
 
     handleClick(event) {
@@ -39,7 +84,7 @@ class App extends Component {
             const characters = [];
             const choices = [];
             
-            createQuiz(original, characters, choices, 10);
+            createQuiz(original, characters, choices, this.state.numQuestions);
 
             this.setState({characters: characters});
             this.setState({choices: choices});
@@ -52,12 +97,11 @@ class App extends Component {
         var count = 0;
 
         // Calculate how many answers are correct
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < this.state.numQuestions; i++) {
             console.log("Choice selected = " + event.target[i].value);
             console.log("Answer = " + this.state.choices[i][4]);
 
-            // Cast both as ints, since one is a string and the other is a Number
-            if (parseInt(event.target[i].value) === parseInt(this.state.choices[i][4])) {
+            if (Number(event.target[i].value) === this.state.choices[i][4]) {
                 count++;
             }
         }
@@ -68,18 +112,15 @@ class App extends Component {
         return (
             <div className="quiz-div">
                 <form onSubmit={this.handleSubmit}>
-                    <div className="custom-control custom-switch">
-                        <input type="checkbox" id="1" value="あ,い,う,え,お" className="custom-control-input" onClick={this.handleClick} />
-                        <label className="custom-control-label" htmlFor="1">a i u e o</label>
-                    </div>
-                    <div className="custom-control custom-switch">
-                        <input type="checkbox" id="2" value="か,き,く,け,こ" className="custom-control-input" onClick={this.handleClick} />
-                        <label className="custom-control-label" htmlFor="2">ka ki ku ke ko</label>
-                    </div>
-                    <div className="custom-control custom-switch">
-                        <input type="checkbox" id="3" value="さ,し,す,せ,そ" className="custom-control-input" onClick={this.handleClick} />
-                        <label className="custom-control-label" htmlFor="3">ta chi tsu te to</label>
-                    </div>
+                    {
+                        this.state.languageList.map((item, index) => {
+                            return <Selector 
+                                key={item.id} 
+                                language={item} 
+                                toggle={this.handleClick} 
+                            />
+                        })
+                    }
                     <div className="button-spacing">
                         <input type="submit" className="btn btn-primary" value="Start the Quiz!" />
                     </div>
@@ -87,9 +128,16 @@ class App extends Component {
                 {!this.state.isHidden && 
                     <form onSubmit={this.handleFinish}>
                         <ul>
-                            {this.state.characters.map((item, index) => {
-                                return <QuizItem key={index} draw={item} choices={this.state.choices} index={index} />
-                            })}
+                            {
+                                this.state.characters.map((item, index) => {
+                                    return <QuizItem 
+                                        key={index} 
+                                        draw={item} 
+                                        choices={this.state.choices} 
+                                        index={index} 
+                                    />
+                                })
+                            }
                         </ul>
                         <div className="d-flex flex-row-reverse button-spacing">
                             <input type="submit" className="btn btn-primary" value="Submit" />
@@ -122,14 +170,35 @@ class QuizItem extends Component {
     }
 }
 
+class Selector extends Component {
+    render() {
+        return (
+            <div className="custom-control custom-switch">
+                <input 
+                    type="checkbox" 
+                    className="custom-control-input"
+                    id={this.props.language.id}
+                    value={this.props.language.hiragana} 
+                    onClick={this.props.toggle} 
+                />
+                <label className="custom-control-label" htmlFor={this.props.language.id}>
+                    {this.props.language.romaji}
+                </label>
+            </div>
+        );
+    }
+}
+
 function createQuiz(original, characters, choices, numQuestions) {
     const elements = [];
     let list = [];
 
-    const dictionary = {あ:"a",か:"ka",さ:"sa",た:"ta",な:"na",は:"ha",ま:"ma",や:"ya",ら:"ra",わ:"wa",ん:"n", 
-    い:"i",き:"ki",し:"shi",ち:"chi",に:"ni",ひ:"hi",み:"mi",り:"ri",う:"u",く:"ku",す:"su",つ:"tsu",ぬ:"nu",
-    ふ:"fu",む:"mu",ゆ:"yu",る:"ru",え:"e",け:"ke",せ:"se",て:"te",ね:"ne",へ:"he",め:"me",れ:"re",お:"o",
-    こ:"ko",そ:"so",と:"to",の:"no",ほ:"ho",も:"mo",よ:"yo",ろ:"ro",を:"wo"};
+    const dictionary = {
+        あ:"a",か:"ka",さ:"sa",た:"ta",な:"na",は:"ha",ま:"ma",や:"ya",ら:"ra",わ:"wa",ん:"n", 
+        い:"i",き:"ki",し:"shi",ち:"chi",に:"ni",ひ:"hi",み:"mi",り:"ri",う:"u",く:"ku",す:"su",つ:"tsu",ぬ:"nu",
+        ふ:"fu",む:"mu",ゆ:"yu",る:"ru",え:"e",け:"ke",せ:"se",て:"te",ね:"ne",へ:"he",め:"me",れ:"re",お:"o",
+        こ:"ko",そ:"so",と:"to",の:"no",ほ:"ho",も:"mo",よ:"yo",ろ:"ro",を:"wo"
+    };
 
     // Combine the selected character groups into a single array
     for (let i = 0; i < original.length; i++) {
@@ -147,21 +216,21 @@ function createQuiz(original, characters, choices, numQuestions) {
         let copyOfElements = [...elements];
 
         // Delete the answer from the copy
-        let index = copyOfElements.indexOf(draw);
-        if (index > -1) {
-            copyOfElements.splice(index, 1);
-        }
+        remove(draw, copyOfElements);
 
         // Get the 4 random choices by removing a drawn choice to make subsequent draws unique
         for (let j = 0; j < 4; j++) {
-            const x = copyOfElements[Math.floor(Math.random()*copyOfElements.length)];
-            list += dictionary[x];
+            let x = copyOfElements[Math.floor(Math.random()*copyOfElements.length)];
+            
+            // FIXME: quick bad hack for selections < 5 characters long
+            if (x == null) {
+                list += "-";
+            } else {
+                list += dictionary[x];
+            }
             
             // Delete x from the copy
-            let index = copyOfElements.indexOf(x);
-            if (index > -1) {
-                copyOfElements.splice(index, 1);
-            }
+            remove(x, copyOfElements);
 
             if (j !== 3) {
                 list += " ";
@@ -178,6 +247,13 @@ function createQuiz(original, characters, choices, numQuestions) {
         choices.push(question);
 
         list = "";
+    }
+}
+
+function remove(x, arr) {
+    let index = arr.indexOf(x);
+    if (index > -1) {
+        arr.splice(index, 1);
     }
 }
 
